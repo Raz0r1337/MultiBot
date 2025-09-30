@@ -1,3 +1,5 @@
+# This Fork
+A slightly modified version of the original MultiBot for Angry-Nerds.
 # MultiBot
 User interface for AzerothCore-Module "Playerbot" by Liyunfan1223.<br>
 Tested with American and German 3.3.5 Wotlk-Client.
