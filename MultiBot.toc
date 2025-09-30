@@ -1,14 +1,12 @@
 ## Interface: 30300
-## Version: 2.0.0
+## Version: 2.0.1
 ## Title: MultiBot
-## Notes: User Interface for Playerbot
-## Author: Nico Löbbert
+## Notes: Benutzeroberfläche für Playerbots
+## Author: Nico Löbbert aka MacX-Lio, Wishmaster117
+## X-Maintainer: Raz0r1337
+
 ## SavedVariablesPerCharacter: MultiBotSave, MultiBotDB, MultiBotSaved
 ## SavedVariables: MultiBotGlobalSave
-## X-Maintainer: Wishmaster117 aka TheWarlock
-## X-Contributors: Wishmaster117 aka TheWarlock
-## X-Contact: admin@azerothdevs.com
-## X-ProjectURL: https://www.azerothdevs.com
 
 Core\MultiBot.lua
 Core\MultiBotConfig.lua
