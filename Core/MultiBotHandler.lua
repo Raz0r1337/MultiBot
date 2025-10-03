@@ -295,14 +295,16 @@ MultiBot:SetScript("OnEvent", function()
 			tButton.doLeft(tButton)
 		end
 		
-		if(MultiBotSave["Reward"] ~= nil) then
-			local tButton = MultiBot.frames["MultiBar"].frames["Main"].buttons["Reward"]
-			
-			if(MultiBotSave["Reward"] == "true")
-			then tButton.setDisable()
-			else tButton.setEnable()
-			end
-			
+		local tButton = MultiBot.frames["MultiBar"].frames["Main"].buttons["Reward"]
+		if (MultiBotSave["Reward"] ~= nil) then
+			if (MultiBotSave["Reward"] == "true") then
+				tButton.setDisable()
+			else
+				tButton.setEnable()
+		end
+		tButton.doLeft(tButton)
+		else
+			tButton.setDisable()
 			tButton.doLeft(tButton)
 		end
 		
