@@ -689,7 +689,7 @@ end
 -- UNITS --
 
 local tButton = tMultiBar.addButton("Units", -38, 0, "inv_scroll_04", MultiBot.tips.units.master)
-tButton.roster = "players"
+tButton.roster = "actives"
 tButton.filter = "none"
 
 tButton.doRight = function(pButton)
@@ -1145,7 +1145,7 @@ function MultiBot.BuildRosterUI(tControl)
   -- 1. Main Button
   local rootBtn = tControl.addButton("Roster", 0, 30,
                                      --"Interface\\AddOns\\MultiBot\\Icons\\roster_players.blp",
-									 "Interface\\AddOns\\MultiBot\\Icons\\roster_players.blp",
+									 "Interface\\AddOns\\MultiBot\\Icons\\roster_actives.blp",
                                      MultiBot.tips.units.roster)
 
  --[[ -- Left Click = toggle sub frame  |  Right Click = select “Players”
@@ -1229,7 +1229,7 @@ TimerAfter(0.05, function()
 
   if unitsBtn and tControl and tControl.buttons and tControl.buttons.Roster then
     MultiBot.Select(tControl, "Roster")
-    unitsBtn.doLeft(unitsBtn, "players")
+    unitsBtn.doLeft(unitsBtn, "actives")
   end
 end)
 
