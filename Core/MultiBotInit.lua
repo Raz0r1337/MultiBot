@@ -1612,6 +1612,12 @@ tButton.doLeft = function(pButton)
 	MultiBot.reward.state = MultiBot.OnOffSwitch(pButton)
 end
 
+TimerAfter(0.1, function()
+	if tButton and tButton.doLeft then
+		tButton.doLeft(tButton)
+	end
+end)
+
 tMain.addButton("Reset", 0, 340, "inv_misc_tournaments_symbol_gnome", MultiBot.tips.main.reset)
 .doLeft = function(pButton)
 	MultiBot.ActionToTargetOrGroup("reset botAI")
