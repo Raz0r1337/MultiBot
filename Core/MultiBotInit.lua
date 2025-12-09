@@ -1612,10 +1612,22 @@ tButton.doLeft = function(pButton)
 	MultiBot.reward.state = MultiBot.OnOffSwitch(pButton)
 end
 
-TimerAfter(0.1, function()
-	if tButton and tButton.doLeft then
-		tButton.doLeft(tButton)
-	end
+-- Reward-Selector beim ersten Mal standardmäßig aktivieren
+TimerAfter(0.05, function()
+    -- gleiche SavedVariables-Tabelle, die auch für die Minimap benutzt wird
+    MultiBotSave = MultiBotSave or {}
+
+    -- Nur ein einziges Mal ausführen
+    if not MultiBotSave.RewardSelectorDefaultApplied then
+        MultiBotSave.RewardSelectorDefaultApplied = true
+
+        -- Nur einschalten, wenn er nicht sowieso schon aktiv ist
+        if not (MultiBot.reward and MultiBot.reward.state) then
+            if tButton and tButton.doLeft then
+                tButton.doLeft(tButton)  -- entspricht einmaligem Klick: ON
+            end
+        end
+    end
 end)
 
 tMain.addButton("Reset", 0, 340, "inv_misc_tournaments_symbol_gnome", MultiBot.tips.main.reset)
