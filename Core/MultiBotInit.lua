@@ -689,7 +689,7 @@ end
 -- UNITS --
 
 local tButton = tMultiBar.addButton("Units", -38, 0, "inv_scroll_04", MultiBot.tips.units.master)
-tButton.roster = "actives"
+tButton.roster = "players"
 tButton.filter = "none"
 
 tButton.doRight = function(pButton)
@@ -1145,7 +1145,7 @@ function MultiBot.BuildRosterUI(tControl)
   -- 1. Main Button
   local rootBtn = tControl.addButton("Roster", 0, 30,
                                      --"Interface\\AddOns\\MultiBot\\Icons\\roster_players.blp",
-									 "Interface\\AddOns\\MultiBot\\Icons\\roster_actives.blp",
+									 "Interface\\AddOns\\MultiBot\\Icons\\roster_players.blp",
                                      MultiBot.tips.units.roster)
 
  --[[ -- Left Click = toggle sub frame  |  Right Click = select “Players”
@@ -1230,9 +1230,9 @@ TimerAfter(0.05, function()
   if unitsBtn and tControl and tControl.buttons and tControl.buttons.Roster then
     --MultiBot.Select(tControl, "Roster")
     local rosterBtn = tControl.buttons.Roster
-    local tex = (rosterBtn and rosterBtn.texture) or "Interface\\AddOns\\MultiBot\\Icons\\roster_activess.blp"
+    local tex = (rosterBtn and rosterBtn.texture) or "Interface\\AddOns\\MultiBot\\Icons\\roster_players.blp"
     MultiBot.Select(tControl, "Roster", tex)
-    unitsBtn.doLeft(unitsBtn, "actives")
+    unitsBtn.doLeft(unitsBtn, "players")
   end
 end)
 
@@ -1614,24 +1614,6 @@ end
 tButton.doLeft = function(pButton)
 	MultiBot.reward.state = MultiBot.OnOffSwitch(pButton)
 end
-
--- Reward-Selector beim ersten Mal standardmäßig aktivieren
-TimerAfter(0.05, function()
-    -- gleiche SavedVariables-Tabelle, die auch für die Minimap benutzt wird
-    MultiBotSave = MultiBotSave or {}
-
-    -- Nur ein einziges Mal ausführen
-    if not MultiBotSave.RewardSelectorDefaultApplied then
-        MultiBotSave.RewardSelectorDefaultApplied = true
-
-        -- Nur einschalten, wenn er nicht sowieso schon aktiv ist
-        if not (MultiBot.reward and MultiBot.reward.state) then
-            if tButton and tButton.doLeft then
-                tButton.doLeft(tButton)  -- entspricht einmaligem Klick: ON
-            end
-        end
-    end
-end)
 
 tMain.addButton("Reset", 0, 340, "inv_misc_tournaments_symbol_gnome", MultiBot.tips.main.reset)
 .doLeft = function(pButton)
