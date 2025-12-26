@@ -693,6 +693,14 @@ tButton.roster = "players"
 tButton.filter = "none"
 
 tButton.doRight = function(pButton)
+  local isGuildRetry = pButton._guildRosterRetrying == true
+  pButton._guildRosterRetrying = false
+  local retryCount = tonumber(pButton._guildRosterRetryCount) or 0
+  if not isGuildRetry then
+    retryCount = 0
+  end
+  local needGuildRetry = false
+
 --[[	-- MEMBERBOTS --
 
 	for i = 1, 50 do
@@ -761,6 +769,14 @@ tButton.doRight = function(pButton)
 	pButton.doLeft(pButton, pButton.roster, pButton.filter)]]--
 
   -- Always refresh guild/friend rosters so their indexes stay in sync
+  local prevShowOffline = nil
+  if type(GetGuildRosterShowOffline) == "function" and type(SetGuildRosterShowOffline) == "function" then
+    prevShowOffline = GetGuildRosterShowOffline()
+    if prevShowOffline == false then
+      SetGuildRosterShowOffline(true)
+    end
+  end
+
   if(type(GuildRoster) == "function") then GuildRoster() end
   if(type(ShowFriends) == "function") then ShowFriends() end
 
@@ -771,10 +787,30 @@ tButton.doRight = function(pButton)
   MultiBot.index.classes.friends = {}
 
   -- MEMBERBOTS --
-  local tMaxMembers = type(GetNumGuildMembers) == "function" and GetNumGuildMembers() or 50
+  local inGuild = false
+  if type(IsInGuild) == "function" then
+    inGuild = IsInGuild()
+  elseif type(GetGuildInfo) == "function" then
+    inGuild = (GetGuildInfo("player") ~= nil)
+  end
+
+  local tMaxMembers = 0
+  if type(GetNumGuildMembers) == "function" then
+    tMaxMembers = select(1, GetNumGuildMembers()) or 0
+  end
+  tMaxMembers = tonumber(tMaxMembers) or 0
+  if tMaxMembers <= 0 then
+    tMaxMembers = 50
+    if inGuild then
+      needGuildRetry = true
+    end
+  end
+
+  local guildCount = 0
   for i = 1, tMaxMembers do
     local tName, _, _, tLevel, tClass = GetGuildRosterInfo(i)
     if(tName ~= nil and tLevel ~= nil and tClass ~= nil and tName ~= UnitName("player")) then
+      guildCount = guildCount + 1
       local tMember = MultiBot.addMember(tClass, tLevel, tName)
       if(tMember.state == false) then
         tMember.setDisable()
@@ -797,13 +833,43 @@ tButton.doRight = function(pButton)
           pButton.setEnable()
         end
       end
-    elseif(tName == nil) then
+    elseif(tName == nil or tLevel == nil or tClass == nil) then
+      if inGuild and i < tMaxMembers then
+        needGuildRetry = true
+      end
       break
     end
   end
 
+  if prevShowOffline == false and type(SetGuildRosterShowOffline) == "function" then
+    SetGuildRosterShowOffline(false)
+  end
+
+  if not isGuildRetry and inGuild and tMaxMembers == 50 and guildCount == 50 then
+    needGuildRetry = true
+  end
+
+  if (not isGuildRetry) and needGuildRetry and type(TimerAfter) == "function" and retryCount < 6 then
+    pButton._guildRosterRetryCount = retryCount + 1
+    pButton._guildRosterRetrying = true
+    TimerAfter(0.25, function()
+      if pButton and pButton.doRight then
+        pButton.doRight(pButton)
+      end
+    end)
+  else
+    pButton._guildRosterRetryCount = 0
+  end
+
   -- FRIENDBOTS --
-  local tMaxFriends = type(GetNumFriends) == "function" and GetNumFriends() or 50
+  local tMaxFriends = 0
+  if type(GetNumFriends) == "function" then
+    tMaxFriends = GetNumFriends() or 0
+  end
+  tMaxFriends = tonumber(tMaxFriends) or 0
+  if tMaxFriends <= 0 then
+    tMaxFriends = 50
+  end
   for i = 1, tMaxFriends do
     local tName, tLevel, tClass = GetFriendInfo(i)
     if(tName ~= nil and tLevel ~= nil and tClass ~= nil and tName ~= UnitName("player")) then
@@ -829,12 +895,15 @@ tButton.doRight = function(pButton)
           pButton.setEnable()
         end
       end
-    elseif(tName == nil) then
-      break
+    --elseif(tName == nil) then
+      --break
+    elseif(tName == nil or tLevel == nil or tClass == nil) then
+      needGuildRetry = true
     end
   end
 
   -- Roster requiring server feedback (players/actives/favorites)
+    if not isGuildRetry then
   local tRoster = pButton.roster or "players"
   if(tRoster == "players" or tRoster == "actives" or tRoster == "favorites") then
     SendChatMessage(".playerbot bot list", "SAY")
@@ -842,7 +911,6 @@ tButton.doRight = function(pButton)
       MultiBot.UpdateFavoritesIndex()
     end
   end
-
   -- Pour les bots déjà groupés : relance un cycle "co ?" afin qu'ils renvoient leurs stratégies
   local function RefreshStrategiesFor(name)
     if not name or name == UnitName("player") then return end
@@ -889,6 +957,8 @@ tButton.doRight = function(pButton)
       RefreshStrategiesFor(UnitName("party" .. i))
     end
   end
+
+    end
 
   pButton.doLeft(pButton, pButton.roster, pButton.filter)
 
@@ -3110,6 +3180,50 @@ tRight.addButton("Summon", 136, 0, "ability_hunter_beastcall", MultiBot.tips.sum
 	MultiBot.ActionToGroup("summon")
 end
 
+-- COMMANDS FOR ALL BOTS --
+-- Bouton principal à droite qui ouvre un sous-menu de commandes globales.
+local btnAllBots = tRight.addButton("AllBotsCommands", 170, 0,
+	"Temp",
+	MultiBot.tips.allbots.commandsallbots)
+
+btnAllBots.doLeft = function(pButton)
+	local menu = tRight.frames and tRight.frames["AllBotsCommandsMenu"]
+	if not menu then
+		return
+	end
+
+	if menu:IsShown() then
+		menu:Hide()
+	else
+		menu:Show()
+	end
+end
+
+-- Sous-menu vertical qui s'ouvre au-dessus du bouton principal
+local tAllBotsMenu = tRight.addFrame("AllBotsCommandsMenu", 170, 34, 32, 64)
+tAllBotsMenu:Hide()
+
+-- Bouton : Maintenance pour tous les bots
+tAllBotsMenu.addButton("MaintenanceAllBots", 0, 34,
+	"achievement_halloween_smiley_01",
+	MultiBot.tips.allbots.maintenanceallbots)
+.doLeft = function(pButton)
+	if MultiBot.MaintenanceAllBots then
+		MultiBot.MaintenanceAllBots()
+	end
+end
+
+-- Bouton : vendre tous les objets gris pour tous les bots (s *)
+tAllBotsMenu.addButton("SellAllBotsGrey", 0, 0,
+	"inv_misc_coin_18",
+	MultiBot.tips.allbots.sellallvendor)
+.doLeft = function(pButton)
+	if MultiBot.SellAllBots then
+		MultiBot.SellAllBots("s *")
+	end
+end
+
+
 -- INVENTORY --
 
 MultiBot.inventory = MultiBot.newFrame(MultiBot, -700, -144, 32, 442, 884)
@@ -4656,7 +4770,7 @@ function MultiBot.FillDefaultGlyphs()
             if rFrame then
                 rFrame:Hide()
                 local runeTex = rFrame.texture or rFrame
-                runeTex:SetTexture("Interface\\Spellbook\\UI-Glyph-Rune"..runeIdx)
+                runeTex:SetTexture(MultiBot.SafeTexturePath("Interface\\Spellbook\\UI-Glyph-Rune"..runeIdx))
             end
 
             -- 3) Icon + Tooltip
@@ -4690,7 +4804,7 @@ function MultiBot.FillDefaultGlyphs()
 
             -- Update icon
             btn.glyphID = id
-            btn.icon:SetTexture(tex)
+            btn.icon:SetTexture(MultiBot.SafeTexturePath(tex))
             btn:Show()
 
             -- Overlay circle
@@ -5383,12 +5497,12 @@ end
     local runeIdx = info and select(2, strsplit(",%s*", info)) or "1"
     local r = socket.frames.Rune
     if r then
-        (r.texture or r):SetTexture("Interface/Spellbook/UI-Glyph-Rune-"..runeIdx)
+        (r.texture or r):SetTexture(MultiBot.SafeTexturePath("Interface\\Spellbook\\UI-Glyph-Rune-"..runeIdx))
         r:Show()
     end
     -- local tex = select(10, GetItemInfo(itemID)) or GetSpellTexture(itemID) or "Interface\\Icons\\INV_Misc_QuestionMark"
 	local tex = select(10, GetItemInfo(itemID)) or GetSpellTexture(itemID) or "Interface\\AddOns\\MultiBot\\Textures\\UI-GlyphFrame-Glow.blp"
-    self.icon:SetTexture(tex)
+    self.icon:SetTexture(MultiBot.SafeTexturePath(tex))
     self.glyphID = itemID
     socket.item = itemID
     ClearCursor()
@@ -5469,7 +5583,7 @@ function MultiBot.talent.showCustomGlyphs()
                 local texSlot = (s.type == "Minor") and
                                  "Interface\\Spellbook\\UI-Glyph-Slot-Minor.blp" or
                                  "Interface\\Spellbook\\UI-Glyph-Slot-Major.blp"
-                btn.bg:SetTexture(texSlot)
+                btn.bg:SetTexture(MultiBot.SafeTexturePath(texSlot))
                 local ic = btn:CreateTexture(nil, "ARTWORK")
                 ic:SetPoint("CENTER", btn, "CENTER", -9, 8)
                 ic:SetSize(s:GetWidth()*0.66, s:GetHeight()*0.66)
@@ -5484,7 +5598,7 @@ function MultiBot.talent.showCustomGlyphs()
 				local texSlot = (s.type == "Minor") and
 								"Interface\\Spellbook\\UI-Glyph-Slot-Minor.blp" or
 								"Interface\\Spellbook\\UI-Glyph-Slot-Major.blp"
-				btn.bg:SetTexture(texSlot)
+				btn.bg:SetTexture(MultiBot.SafeTexturePath(texSlot))
 			end
 
             btn.bg:Show()
@@ -6567,8 +6681,9 @@ if not MultiBot.InitShamanQuick then
       -- 3) Dernier repli : region texture stockée par le wrapper (btn.icon ou btn.texture)
       local tex = btn.icon or btn.texture
       if tex and tex.SetTexture then
-        tex:SetTexture(iconPath)
-        btn._mb_iconPath = iconPath
+        local safePath = MultiBot.SafeTexturePath(iconPath)
+        tex:SetTexture(safePath)
+        btn._mb_iconPath = safePath
         return
       end
     end
