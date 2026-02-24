@@ -317,7 +317,7 @@ Screens:
 
 Port Multibot to ACE 3
 
-## ACE3 migration roadmap (beginner-friendly)
+## ACE3 migration roadmap
 
 This addon is currently a classic Lua addon (manual frame/event architecture).
 The ACE3 migration will be done incrementally to avoid regressions.
