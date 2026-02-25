@@ -6163,7 +6163,7 @@ if not MultiBot.InitHunterQuick then
           local unit = "raid"..i
           local name = UnitName(unit)
           local _, cls = UnitClass(unit)
-          if name and cls=="HUNTER" and MultiBot.getBot and (MultiBot.getBot(name) ~= nil or MultiBot.getBot(unit) ~= nil) then
+          if name and cls == "HUNTER" and (not MultiBot.IsBot or MultiBot.IsBot(name)) then
             table.insert(out, name)
           end
         end
@@ -6173,7 +6173,7 @@ if not MultiBot.InitHunterQuick then
             local unit = "party"..i
             local name = UnitName(unit)
             local _, cls = UnitClass(unit)
-            if name and cls=="HUNTER" and MultiBot.getBot and (MultiBot.getBot(name) ~= nil or MultiBot.getBot(unit) ~= nil) then
+            if name and cls == "HUNTER" and (not MultiBot.IsBot or MultiBot.IsBot(name)) then
               table.insert(out, name)
             end
           end

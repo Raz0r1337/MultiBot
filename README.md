@@ -24,9 +24,6 @@ To allow the community to benefit from the additional features and improvements 
 
 Thank you for understanding.
 
-# Comming soon
-Port Multibot to ACE 3
-
 ---
 
 Screens:
@@ -316,4 +313,94 @@ Screens:
   </tr>
 </table>
 
-# Currently not supported
+# Comming soon
+
+Port Multibot to ACE 3
+
+## ACE3 migration roadmap
+
+This addon is currently a classic Lua addon (manual frame/event architecture).
+The ACE3 migration will be done incrementally to avoid regressions.
+
+### Milestone 1 - Baseline and safety net
+1. Creation of a dedicated branch (`ace3-migration`).
+2. Record current behavior (slash commands, minimap button, major windows, bot command actions).
+3. Add a short migration checklist file (`docs/ace3-migration-checklist.md`) with "works before/after" items.
+
+Exit criteria:
+- Addon loads with no Lua errors before any ACE3 code is introduced.
+
+### Milestone 2 - Add ACE3 libraries without changing behavior
+1. Add required libs (AceAddon-3.0, AceEvent-3.0, AceConsole-3.0, AceDB-3.0, optional AceGUI-3.0, LibDBIcon-1.0).
+2. Update `MultiBot.toc` to load libs and keep existing files working.
+3. Introduce a minimal addon object (e.g. `MultiBot = LibStub("AceAddon-3.0"):NewAddon(...)`).
+
+Exit criteria:
+- Addon still behaves exactly the same.
+- No duplicate initialization paths.
+
+### Milestone 3 - Initialization lifecycle migration
+1. Move startup logic from `Core/MultiBotInit.lua` into `OnInitialize` and `OnEnable`.
+2. Keep old init helpers but call them from ACE3 lifecycle methods.
+3. Ensure events are registered once (avoid duplicate handlers).
+
+Exit criteria:
+- UI and commands initialize once per login/reload.
+
+### Milestone 4 - Command system migration
+1. Replace/manual-wrap slash command registration with `AceConsole-3.0` (`RegisterChatCommand`).
+2. Keep existing aliases (`/multibot`, `/mbot`, `/mb`).
+3. Route command handlers to existing logic functions (no duplicate business logic).
+
+Exit criteria:
+- Existing command behavior unchanged.
+
+### Milestone 5 - Event bus migration
+1. Migrate event registration to `AceEvent-3.0` (`RegisterEvent`).
+2. Keep current event handlers and adapt signatures only where required.
+3. Validate frequently fired events for performance (no extra allocations in hot paths).
+
+Exit criteria:
+- No event spam regressions.
+- No duplicated event callbacks.
+
+### Milestone 6 - SavedVariables migration (AceDB)
+1. Map `Core/MultiBotConfig.lua` data into an AceDB schema.
+2. Provide defaults and one-way migration from legacy keys.
+3. Keep backward compatibility for existing users.
+
+Exit criteria:
+- Existing user settings survive migration.
+- Fresh installs use AceDB defaults.
+
+### Milestone 7 - Minimap/options integration
+1. Keep current UI first; only integrate config access patterns.
+2. Optionally add LibDBIcon integration for minimap behavior.
+3. Defer large UI rewrites (AceGUI) until core migration is stable.
+
+Exit criteria:
+- Minimap toggle and options remain functional.
+
+### Milestone 8 - Optional UI refactor (last)
+1. Refactor one screen at a time to AceGUI.
+2. Preserve existing data/control flow from `UI/*.lua`.
+3. Avoid big-bang rewrites.
+
+Exit criteria:
+- Each migrated screen is functionally equivalent before moving to the next.
+
+### Milestone 9 - Regression pass and release
+1. Run a full in-game test matrix (group controls, individual bot controls, inventory actions, filters, talent/spec windows, PVP UI).
+2. Clean dead code paths and keep one canonical helper per responsibility.
+3. Publish migration notes for users.
+
+Exit criteria:
+- Stable behavior on target 3.3.5 clients.
+- No known blocker regressions.
+
+### Execution order (small PRs)
+1. PR#1: libs + minimal addon bootstrap.
+2. PR#2: lifecycle + commands.
+3. PR#3: events + AceDB migration.
+4. PR#4: minimap/options integration.
+5. PR#5: optional UI refactors.
