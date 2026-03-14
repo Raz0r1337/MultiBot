@@ -609,7 +609,7 @@ local function AddClassButton(frame, info)
 end
 
 --  Creator
-tLeft.addButton("Creator", -0, 0, "inv_helmet_145a", MultiBot.tips.creator.master)
+tLeft.addButton("Creator", 0, 0, "inv_helmet_145a", MultiBot.tips.creator.master).doHide()
   .doLeft = function(btn)
     MultiBot.ShowHideSwitch(btn.parent.frames["Creator"])
     MultiBot.frames["MultiBar"].frames["Units"]:Hide()
