@@ -153,6 +153,9 @@ MultiBot:SetScript("OnEvent", function()
         local function affect(frmKey, frm)
           return frmKey ~= "ShamanQuick" and frmKey ~= "HunterQuick"
         end
+        if MultiBotSave["UIVisible"] == nil then
+          MultiBotSave["UIVisible"] = false
+        end
         if MultiBotSave["UIVisible"] == false then
           for key, value in pairs(MultiBot.frames) do
             if affect(key, value) then value:Hide() end
